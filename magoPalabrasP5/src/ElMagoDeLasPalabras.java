@@ -67,40 +67,68 @@ public class ElMagoDeLasPalabras {
             System.out.println("Letras disponibles: " + letrasRonda);
 
             Set<String> palabrasUsadas = new HashSet<>();
+            Map<String, Boolean> quiereSeguir = new HashMap<>();
+            jugadores.forEach(j -> quiereSeguir.put(j, true));
 
-            for (String jugador : jugadores) {
-                System.out.print(jugador + ", escribe una palabra: ");
-                String palabra = sc.nextLine().toLowerCase();
 
-                String palabraNormalizada = quitarTildes(palabra);
-                String palabraVerificable = modo == 1 ? palabraNormalizada : palabra;
+            Iterator<String> itInicio = jugadores.iterator(); //i
+            while (itInicio.hasNext()) {
+                String jugador = itInicio.next();
+                procesarPalabra(jugador, letrasRonda, modo, diccionario, palabrasUsadas, puntajes, palabrasPorJugador, perdidasPorJugador);
+            }
 
-                if (modo == 2 && palabra.length() < 4) {
-                    System.out.println("Palabra demasiado corta para modo experto.");
-                    puntajes.put(jugador, puntajes.get(jugador) - 5);
-                    perdidasPorJugador.get(jugador).add(palabra + " (-5 pts)");
-                } else if (!palabraValida(palabraVerificable, letrasRonda, modo)) {
-                    System.out.println("Palabra inválida: contiene letras no disponibles.");
-                    puntajes.put(jugador, puntajes.get(jugador) - 5);
-                    perdidasPorJugador.get(jugador).add(palabra + " (-5 pts)");
-                } else if (!diccionario.contains(palabra) && !diccionario.contains(palabraNormalizada)) {
-                    System.out.println("Palabra inválida: no está en el diccionario.");
-                    puntajes.put(jugador, puntajes.get(jugador) - 5);
-                    perdidasPorJugador.get(jugador).add(palabra + " (-5 pts)");
-                } else if (palabrasUsadas.contains(palabra)) {
-                    System.out.println("Palabra ya usada en esta ronda.");
-                    puntajes.put(jugador, puntajes.get(jugador) - 5);
-                    perdidasPorJugador.get(jugador).add(palabra + " (-5 pts)");
-                } else {
-                    int puntos = calcularPuntuacion(palabra);
-                    puntajes.put(jugador, puntajes.get(jugador) + puntos);
-                    palabrasPorJugador.get(jugador).add(palabra + " (" + puntos + " pts)");
-                    palabrasUsadas.add(palabra);
-                    System.out.println("Palabra válida! +" + puntos + " puntos.");
+            while (quiereSeguir.containsValue(true)) {
+                Iterator<String> it = jugadores.iterator();
+                while (it.hasNext()) {
+                    String jugador = it.next();
+                    if (!quiereSeguir.get(jugador)) continue;
+
+                    System.out.print(jugador + ", ¿quieres escribir otra palabra? (s/n): ");
+                    String respuesta = sc.nextLine().trim().toLowerCase();
+                    if (respuesta.equals("s")) {
+                        procesarPalabra(jugador, letrasRonda, modo, diccionario, palabrasUsadas, puntajes, palabrasPorJugador, perdidasPorJugador);
+                    } else {
+                        quiereSeguir.put(jugador, false);
+                    }
                 }
             }
 
             mostrarPuntajes(jugadores, puntajes, palabrasPorJugador, perdidasPorJugador);
+        }
+    }
+
+    private static void procesarPalabra(String jugador, List<Character> letrasRonda, int modo, Set<String> diccionario,
+                                        Set<String> palabrasUsadas, Map<String, Integer> puntajes,
+                                        Map<String, List<String>> palabrasPorJugador, Map<String, List<String>> perdidasPorJugador) {
+
+        System.out.print(jugador + ", escribe una palabra: ");
+        String palabra = sc.nextLine().toLowerCase();
+
+        String palabraNormalizada = quitarTildes(palabra);
+        String palabraVerificable = modo == 1 ? palabraNormalizada : palabra;
+
+        if (modo == 2 && palabra.length() < 4) {
+            System.out.println("Palabra demasiado corta para modo experto.");
+            puntajes.put(jugador, puntajes.get(jugador) - 5);
+            perdidasPorJugador.get(jugador).add(palabra + " (-5 pts)");
+        } else if (!palabraValida(palabraVerificable, letrasRonda, modo)) {
+            System.out.println("Palabra inválida: contiene letras no disponibles.");
+            puntajes.put(jugador, puntajes.get(jugador) - 5);
+            perdidasPorJugador.get(jugador).add(palabra + " (-5 pts)");
+        } else if (!diccionario.contains(palabra) && !diccionario.contains(palabraNormalizada)) {
+            System.out.println("Palabra inválida: no está en el diccionario.");
+            puntajes.put(jugador, puntajes.get(jugador) - 5);
+            perdidasPorJugador.get(jugador).add(palabra + " (-5 pts)");
+        } else if (palabrasUsadas.contains(palabra)) {
+            System.out.println("Palabra ya usada en esta ronda.");
+            puntajes.put(jugador, puntajes.get(jugador) - 5);
+            perdidasPorJugador.get(jugador).add(palabra + " (-5 pts)");
+        } else {
+            int puntos = calcularPuntuacion(palabra);
+            puntajes.put(jugador, puntajes.get(jugador) + puntos);
+            palabrasPorJugador.get(jugador).add(palabra + " (" + puntos + " pts)");
+            palabrasUsadas.add(palabra);
+            System.out.println("Palabra válida! +" + puntos + " puntos.");
         }
     }
 
